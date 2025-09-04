@@ -1,23 +1,31 @@
-import { useEffect } from "react"
-import { RiEditBoxLine } from "react-icons/ri"
-import { useSelector } from "react-redux"
-import { useNavigate } from "react-router-dom"
+import { useEffect } from "react";
+import { RiEditBoxLine } from "react-icons/ri";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-import { formattedDate } from "../../../utils/dateFormatter"
-import IconBtn from "../../common/IconBtn"
-import Img from './../../common/Img';
-
-
+import IconBtn from "../../common/IconBtn";
+import Img from "../../common/Img";
+import { formattedDate } from "../../../utils/dateFormatter.js";
 
 export default function MyProfile() {
-  const { user } = useSelector((state) => state.profile)
+  const { user } = useSelector((state) => state.profile);
+
+  if (!user) {
+    return <div className="text-center text-richblack-300">Loading profile...</div>;
+  }
+
   const navigate = useNavigate();
 
-
-  // Scroll to the top of the page when the component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [])
+  }, []);
+
+  // Fallback để tránh crash nếu user chưa có dữ liệu
+  const fullName = user?.fullName || user?.username || "Unknown User";
+  const email = user?.email || "No email provided";
+  const username = user?.username || "No username";
+  const phone = user?.phone || "Add phone number";
+  const birthday = user?.birthday ? formattedDate(user.birthday) : "Add date of birth";
 
   return (
       <>
@@ -30,21 +38,18 @@ export default function MyProfile() {
           <div className="flex items-center gap-x-4">
             <Img
                 src={user?.image}
-                alt={`profile-${user?.username}`}
+                alt={`profile-${username}`}
                 className="aspect-square w-[78px] rounded-full object-cover"
             />
             <div className="space-y-1">
               <p className="text-lg font-semibold text-richblack-5 capitalize">
-                {user?.fullName || user?.username}
+                {fullName}
               </p>
-              <p className="text-sm text-richblack-300">{user?.email}</p>
+              <p className="text-sm text-richblack-300">{email}</p>
             </div>
           </div>
 
-          <IconBtn
-              text="Edit"
-              onclick={() => navigate("/dashboard/settings")}
-          >
+          <IconBtn text="Edit" onClick={() => navigate("/dashboard/settings")}>
             <RiEditBoxLine />
           </IconBtn>
         </div>
@@ -55,62 +60,36 @@ export default function MyProfile() {
             <p className="text-lg font-semibold text-richblack-5">
               Personal Details
             </p>
-            <IconBtn
-                text="Edit"
-                onclick={() => navigate("/dashboard/settings")}
-            >
+            <IconBtn text="Edit" onClick={() => navigate("/dashboard/settings")}>
               <RiEditBoxLine />
             </IconBtn>
           </div>
 
-          <div className="flex max-w-[500px] justify-between">
+          <div className="flex flex-col sm:flex-row max-w-[500px] justify-between gap-y-5">
             <div className="flex flex-col gap-y-5">
-              <div>
-                <p className="mb-2 text-sm text-richblack-600">Full Name</p>
-                <p className="text-sm font-semibold text-richblack-5 capitalize">
-                  {user?.fullName}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-sm text-richblack-600">Username</p>
-                <p className="text-sm font-semibold text-richblack-5 capitalize">
-                  {user?.username}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-sm text-richblack-600">Email</p>
-                <p className="text-sm font-semibold text-richblack-5">
-                  {user?.email}
-                </p>
-              </div>
+              <InfoField label="Full Name" value={fullName} />
+              <InfoField label="Username" value={username} />
+              <InfoField label="Email" value={email} />
             </div>
 
             <div className="flex flex-col gap-y-5">
-              <div>
-                <p className="mb-2 text-sm text-richblack-600">Phone</p>
-                <p className="text-sm font-semibold text-richblack-5">
-                  {user?.phone ?? "Add phone number"}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-sm text-richblack-600">Birthday</p>
-                <p className="text-sm font-semibold text-richblack-5">
-                  {user?.birthday ?? "Add date of birth"}
-                </p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-sm text-richblack-600">Role</p>
-                <p className="text-sm font-semibold text-richblack-5 capitalize">
-                  {user?.kind === 1 ? "Admin" : user?.kind === 2 ? "Educator" : "Student"}
-                </p>
-              </div>
+              <InfoField label="Phone" value={phone} />
+              <InfoField label="Birthday" value={birthday} />
             </div>
           </div>
         </div>
       </>
-  )
+  );
+}
+
+// Tách component nhỏ cho từng field
+function InfoField({ label, value }) {
+  return (
+      <div>
+        <p className="mb-2 text-sm text-richblack-600">{label}</p>
+        <p className="text-sm font-semibold text-richblack-5 capitalize">
+          {value}
+        </p>
+      </div>
+  );
 }

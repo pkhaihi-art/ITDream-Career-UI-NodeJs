@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux'
 
 import { NavbarLinks } from "../../../data/navbar-links"
 import studyNotionLogo from '../../assets/Logo/logo2.svg'
-import { fetchCourseCategories } from './../../services/operations/courseDetailsAPI';
 
 import ProfileDropDown from '../core/Auth/ProfileDropDown'
 import MobileProfileDropDown from '../core/Auth/MobileProfileDropDown'
@@ -12,34 +11,37 @@ import MobileProfileDropDown from '../core/Auth/MobileProfileDropDown'
 import { AiOutlineShoppingCart } from "react-icons/ai"
 import { MdKeyboardArrowDown } from "react-icons/md"
 
-
-
+// Nếu cần gọi API thực, import apiConnector tại đây
+// import { apiConnector } from '../../../services/apiConnector'
+// import { CATEGORIES_API } from '../../../services/apis'
 
 const Navbar = () => {
-    // console.log("Printing base url: ", import.meta.env.VITE_APP_BASE_URL);
     const { token } = useSelector((state) => state.auth);
     const { user } = useSelector((state) => state.profile);
-    // console.log('USER data from Navbar (store) = ', user)
     const { totalItems } = useSelector((state) => state.cart)
     const location = useLocation();
 
     const [subLinks, setSubLinks] = useState([]);
     const [loading, setLoading] = useState(false);
 
-
     const fetchSublinks = async () => {
         try {
             setLoading(true)
-            const res = await fetchCourseCategories();
-            // const result = await apiConnector("GET", categories.CATEGORIES_API);
-            // const result = await apiConnector('GET', 'http://localhost:4000/api/v1/course/showAllCategories');
-            // console.log("Printing Sublinks result:", result);
-            setSubLinks(res);
+            // Nếu đã có API:
+            // const response = await apiConnector("GET", CATEGORIES_API);
+            // setSubLinks(response?.data?.data || []);
+
+            // Tạm thời mock data (tránh lỗi)
+            setSubLinks([
+                { name: "Development" },
+                { name: "Design" },
+                { name: "Marketing" },
+            ]);
+        } catch (error) {
+            console.error("Could not fetch the category list: ", error);
+        } finally {
+            setLoading(false)
         }
-        catch (error) {
-            console.log("Could not fetch the category list = ", error);
-        }
-        setLoading(false)
     }
 
     // console.log('data of store  = ', useSelector((state)=> state))

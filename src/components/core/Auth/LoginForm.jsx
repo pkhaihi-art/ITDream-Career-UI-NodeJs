@@ -4,63 +4,39 @@ import { useDispatch } from "react-redux"
 import { Link, useNavigate } from "react-router-dom"
 
 import { login } from "../../../services/operations/authAPI"
-import Tab from "../../common/Tab"
 
 function LoginForm() {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
 
-  // role (grantType)
-  const [grantType, setGrantType] = useState("student");
-
-  // giữ chung value để tái sử dụng
-  const [accountValue, setAccountValue] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleOnSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    // nếu admin thì dùng username, ngược lại dùng email
-    const payload =
-        grantType === "admin"
-            ? { username: accountValue, password }
-            : { email: accountValue, password };
-
-    dispatch(login(grantType, payload, navigate));
-  };
-
-  const tabData = [
-    { id: 1, tabName: "Admin", type: "admin" },
-    { id: 2, tabName: "Educator", type: "educator" },
-    { id: 3, tabName: "Student", type: "student" },
-  ];
+    const payload = { email, password }
+    dispatch(login(payload, navigate))
+  }
 
   return (
       <form
           onSubmit={handleOnSubmit}
           className="mt-6 flex w-full flex-col gap-y-4"
       >
-        {/* Tabs chọn role */}
-        <Tab tabData={tabData} field={grantType} setField={setGrantType} />
-
-        {/* Username / Email */}
+        {/* Email */}
         <label className="w-full">
           <p className="mb-1 text-sm text-richblack-5">
-            {grantType === "admin" ? "Username" : "Email Address"}{" "}
-            <sup className="text-pink-200">*</sup>
+            Email Address <sup className="text-pink-200">*</sup>
           </p>
           <input
               required
-              type={grantType === "admin" ? "text" : "email"}
-              name={grantType === "admin" ? "username" : "email"}
-              value={accountValue}
-              onChange={(e) => setAccountValue(e.target.value)}
-              placeholder={
-                grantType === "admin"
-                    ? "Enter username"
-                    : "Enter email address"
-              }
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter email address"
               className="w-full rounded-md bg-richblack-800 p-3 text-richblack-5 outline-none"
           />
         </label>
@@ -104,7 +80,7 @@ function LoginForm() {
           Sign In
         </button>
       </form>
-  );
+  )
 }
 
-export default LoginForm;
+export default LoginForm

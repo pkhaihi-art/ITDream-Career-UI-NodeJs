@@ -12,13 +12,13 @@ const {
   LOGIN_API,
   RESETPASSTOKEN_API,
   RESETPASSWORD_API,
-  ADMIN_PROFILE_API,
+  PROFILE_API,
+  VERIFY_OTP_API,
 } = endpoints
 
 // ================ send Otp ================
 export function sendOtp(email, navigate) {
   return async (dispatch) => {
-
     const toastId = toast.loading("Loading...");
     dispatch(setLoading(true));
 
@@ -26,114 +26,140 @@ export function sendOtp(email, navigate) {
       const response = await apiConnector("POST", SENDOTP_API, {
         email,
         checkUserPresent: true,
-      })
-      // console.log("SENDOTP API RESPONSE ---> ", response)
+      });
 
-      // console.log(response.data.success)
-      if (!response.data.success) {
-        throw new Error(response.data.message);
+      if (!response?.data?.message) {
+        throw new Error("Failed to send OTP");
       }
 
-      navigate("/verify-email");
-      toast.success("OTP Sent Successfully");
+      toast.success(response.data.message); // ví dụ: "OTP sent to email"
+      // Nếu đang ở trang verify rồi thì không cần navigate nữa
+      if (navigate) navigate("/verify-email");
     } catch (error) {
       console.log("SENDOTP API ERROR --> ", error);
-      toast.error(error.response.data?.message);
-      // toast.error("Could Not Send OTP")
+      toast.error(error?.response?.data?.message || "Could not send OTP");
+    } finally {
+      dispatch(setLoading(false));
+      toast.dismiss(toastId);
     }
-    dispatch(setLoading(false));
-    toast.dismiss(toastId);
-  }
+  };
 }
 
-// ================ sign Up ================
-export function signUp(accountType, firstName, lastName, email, password, confirmPassword, otp, navigate) {
+
+export function verifyEmail(email, otp, navigate) {
   return async (dispatch) => {
-
-    const toastId = toast.loading("Loading...");
+    const toastId = toast.loading("Verifying...");
     dispatch(setLoading(true));
-    try {
-      const response = await apiConnector("POST", SIGNUP_API, {
-        accountType,
-        firstName,
-        lastName,
-        email,
-        password,
-        confirmPassword,
-        otp,
-      })
 
-      // console.log("SIGNUP API RESPONSE --> ", response);
-      if (!response.data.success) {
-        toast.error(response.data.message);
-        throw new Error(response.data.message);
+    try {
+      const response = await apiConnector("POST", VERIFY_OTP_API, { email, otp });
+
+      // API chỉ trả về message
+      if (!response?.data?.message) {
+        throw new Error("Unexpected response from server");
       }
 
-      toast.success("Signup Successful");
-      navigate("/login");
+      toast.success(response.data.message); // "User registered. OTP sent to email." hoặc "Email verified"
+      navigate("/login"); // hoặc trang bạn muốn sau khi xác thực thành công
+      return true;
+    } catch (error) {
+      console.log("VERIFY OTP ERROR --> ", error);
+      toast.error(error?.response?.data?.message || "Verification failed");
+      return false;
+    } finally {
+      dispatch(setLoading(false));
+      toast.dismiss(toastId);
+    }
+  };
+}
+
+export function signUp(email, username, password, fullName, phone, birthday, navigate) {
+  return async (dispatch) => {
+    const toastId = toast.loading("Loading...");
+    dispatch(setLoading(true));
+
+    try {
+      const response = await apiConnector("POST", SIGNUP_API, {
+        email,
+        username,
+        password,
+        fullName,
+        phone,
+        birthday,
+      });
+
+      // Kiểm tra nếu có message thì coi như thành công
+      if (!response?.data?.message) {
+        throw new Error("Unexpected response from server");
+      }
+
+      toast.success(response.data.message); // "User registered. OTP sent to email."
+      navigate("/verify-email");
+
+      return true;
     } catch (error) {
       console.log("SIGNUP API ERROR --> ", error);
-      // toast.error(error.response.data.message);
-      toast.error("Invalid OTP");
-      // navigate("/signup")
+      toast.error(error?.response?.data?.message || "Signup Failed");
+      return false;
+    } finally {
+      dispatch(setLoading(false));
+      toast.dismiss(toastId);
     }
-    dispatch(setLoading(false))
-    toast.dismiss(toastId)
-  }
+  };
 }
+
 
 
 // ================ Login ================
-export function login(grantType, credentials, navigate) {
+export function login(credentials, navigate) {
   return async (dispatch) => {
     const toastId = toast.loading("Loading...");
     dispatch(setLoading(true));
 
     try {
       // --- Step 1: Login ---
-      const response = await apiConnector("POST", LOGIN_API, {
-        grantType,
-        ...credentials,
-      });
+      const response = await apiConnector("POST", LOGIN_API, credentials);
 
-      if (!response.data?.accessToken) {
-        throw new Error(response.data?.message || "Login failed");
+      if (!response?.data?.accessToken) {
+        throw new Error(response?.data?.message || "Login failed");
       }
-
-      toast.success("Login Successful");
 
       const accessToken = response.data.accessToken;
       dispatch(setToken(accessToken));
       localStorage.setItem("accessToken", accessToken);
 
+      toast.success("Login Successful");
+
       // --- Step 2: Get Profile ---
-      const profileRes = await apiConnector("GET", ADMIN_PROFILE_API, null, {
+      const profileRes = await apiConnector("GET", PROFILE_API, null, {
         Authorization: `Bearer ${accessToken}`,
       });
 
-      const adminProfile = profileRes.data?.admin;
-      if (adminProfile) {
-        const userImage = adminProfile.image
-            ? adminProfile.image
-            : `https://api.dicebear.com/5.x/initials/svg?seed=${adminProfile.username || adminProfile.email}`;
-
-        dispatch(setUser({ ...adminProfile, image: userImage }));
-        localStorage.setItem(
-            "user",
-            JSON.stringify({ ...adminProfile, image: userImage })
-        );
+      const adminProfile = profileRes.data?.profile; // <-- Lấy từ profile
+      if (!adminProfile) {
+        throw new Error("Failed to load profile");
       }
+
+      const userImage =
+          adminProfile.image ||
+          `https://api.dicebear.com/5.x/initials/svg?seed=${
+              adminProfile.username || adminProfile.email
+          }`;
+
+      const finalUser = { ...adminProfile, image: userImage };
+
+      dispatch(setUser(finalUser));
+      localStorage.setItem("user", JSON.stringify(finalUser));
 
       // --- Step 3: Navigate ---
       navigate("/dashboard/my-profile");
-
     } catch (error) {
       console.log("LOGIN ERROR.......", error);
-      toast.error(error.response?.data?.message || error.message);
+      toast.error(error?.response?.data?.message || error.message);
+    } finally {
+      dispatch(setLoading(false));
+      toast.dismiss(toastId);
     }
-
-    dispatch(setLoading(false));
-    toast.dismiss(toastId);
   };
 }
 

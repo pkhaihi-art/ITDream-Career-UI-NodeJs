@@ -2,17 +2,18 @@ const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
 // AUTH ENDPOINTS
 export const endpoints = {
-  SENDOTP_API: BASE_URL + "/auth/sendotp",
-  SIGNUP_API: BASE_URL + "/auth/signup",
+  SENDOTP_API: BASE_URL + "/v1/user/verify-otp",
+  SIGNUP_API: BASE_URL + "/v1/user/register",
   LOGIN_API: BASE_URL + "/api/token",
   RESETPASSTOKEN_API: BASE_URL + "/auth/reset-password-token",
   RESETPASSWORD_API: BASE_URL + "/auth/reset-password",
-  ADMIN_PROFILE_API: BASE_URL + "/v1/admin/profile",
+  PROFILE_API: BASE_URL + "/v1/user/profile",
+  VERIFY_OTP_API: BASE_URL + "/v1/user/verify-otp",
 }
 
 // PROFILE ENDPOINTS
 export const profileEndpoints = {
-  GET_USER_DETAILS_API: BASE_URL + "/v1/admin/profile",
+  GET_USER_DETAILS_API: BASE_URL + "/v1/user/profile",
   GET_USER_ENROLLED_COURSES_API: BASE_URL + "/profile/getEnrolledCourses",
   GET_INSTRUCTOR_DATA_API: BASE_URL + "/profile/instructorDashboard",
 }

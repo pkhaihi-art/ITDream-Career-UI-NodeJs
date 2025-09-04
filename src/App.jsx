@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation, Link } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import Home from "./pages/Home"
@@ -13,7 +13,6 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import PageNotFound from "./pages/PageNotFound";
 import CourseDetails from './pages/CourseDetails';
-import Catalog from './pages/Catalog';
  
 import Navbar from "./components/common/Navbar"
 
@@ -38,6 +37,9 @@ import VideoDetails from './components/core/ViewCourse/VideoDetails';
 import { ACCOUNT_TYPE } from './utils/constants';
 
 import { HiArrowNarrowUp } from "react-icons/hi"
+import ProductDetails from "./pages/ProductDetails.jsx";
+import Shop from "./pages/Shop.jsx";
+
 
 
 function App() {
@@ -90,8 +92,9 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
-        <Route path="catalog/:catalogName" element={<Catalog />} />
         <Route path="courses/:courseId" element={<CourseDetails />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/product/:productId" element={<ProductDetails />} />
 
         {/* Open Route - for Only Non Logged in User */}
         <Route
@@ -133,7 +136,6 @@ function App() {
             </OpenRoute>
           }
         />
-
 
 
 
