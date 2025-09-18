@@ -12,11 +12,12 @@ function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [grantType, setGrantType] = useState("student") // Default to student
 
   const handleOnSubmit = (e) => {
     e.preventDefault()
 
-    const payload = { email, password }
+    const payload = { grantType, email, password }
     dispatch(login(payload, navigate))
   }
 
@@ -25,18 +26,35 @@ function LoginForm() {
           onSubmit={handleOnSubmit}
           className="mt-6 flex w-full flex-col gap-y-4"
       >
-        {/* Email */}
+        {/* Account Type */}
         <label className="w-full">
           <p className="mb-1 text-sm text-richblack-5">
-            Email Address <sup className="text-pink-200">*</sup>
+            Account Type <sup className="text-pink-200">*</sup>
+          </p>
+          <select
+              required
+              value={grantType}
+              onChange={(e) => setGrantType(e.target.value)}
+              className="w-full rounded-md bg-richblack-800 p-3 text-richblack-5 outline-none"
+          >
+            <option value="student">Student</option>
+            <option value="educator">Educator</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+
+        {/* Email/Username */}
+        <label className="w-full">
+          <p className="mb-1 text-sm text-richblack-5">
+            {grantType === 'admin' ? 'Username' : 'Email Address'} <sup className="text-pink-200">*</sup>
           </p>
           <input
               required
-              type="email"
+              type={grantType === 'admin' ? 'text' : 'email'}
               name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email address"
+              placeholder={grantType === 'admin' ? 'Enter username' : 'Enter email address'}
               className="w-full rounded-md bg-richblack-800 p-3 text-richblack-5 outline-none"
           />
         </label>

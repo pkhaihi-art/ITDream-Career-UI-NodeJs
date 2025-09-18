@@ -19,12 +19,13 @@ function SignupForm() {
     birthday: "",
     password: "",
     confirmPassword: "",
+    userType: "student", // Default to student
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const { fullName, username, email, phone, birthday, password, confirmPassword } = formData;
+  const { fullName, username, email, phone, birthday, password, confirmPassword, userType } = formData;
 
   const handleOnChange = (e) => {
     setFormData((prevData) => ({
@@ -41,12 +42,12 @@ function SignupForm() {
       return;
     }
 
-    const signupData = { email, username, password, fullName, phone, birthday };
+    const signupData = { email, username, password, fullName, phone, birthday, userType };
 
     dispatch(setSignupData(signupData));
 
     const result = await dispatch(
-        signUp(email, username, password, fullName, phone, birthday, navigate)
+        signUp(email, username, password, fullName, phone, birthday, userType, navigate)
     );
 
     if (result) {
@@ -61,6 +62,7 @@ function SignupForm() {
       birthday: "",
       password: "",
       confirmPassword: "",
+      userType: "student",
     });
   };
 
@@ -145,6 +147,23 @@ function SignupForm() {
                 onChange={handleOnChange}
                 className="w-full rounded-md bg-richblack-800 p-3 text-richblack-5 outline-none"
             />
+          </label>
+
+          {/* User Type */}
+          <label>
+            <p className="mb-1 text-sm text-richblack-5">
+              Account Type <sup className="text-pink-200">*</sup>
+            </p>
+            <select
+                required
+                name="userType"
+                value={userType}
+                onChange={handleOnChange}
+                className="w-full rounded-md bg-richblack-800 p-3 text-richblack-5 outline-none"
+            >
+              <option value="student">Student</option>
+              <option value="educator">Educator</option>
+            </select>
           </label>
 
           <div className="flex gap-x-4">

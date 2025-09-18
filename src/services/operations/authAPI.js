@@ -6,14 +6,18 @@ import { setUser } from "../../slices/profileSlice"
 import { apiConnector } from "../apiConnector"
 import { endpoints } from "../apis"
 
+const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+
 const {
   SENDOTP_API,
-  SIGNUP_API,
+  SIGNUP_STUDENT_API,
+  SIGNUP_EDUCATOR_API,
   LOGIN_API,
   RESETPASSTOKEN_API,
   RESETPASSWORD_API,
   PROFILE_API,
   VERIFY_OTP_API,
+  RESEND_OTP_API,
 } = endpoints
 
 // ================ send Otp ================
@@ -73,13 +77,16 @@ export function verifyEmail(email, otp, navigate) {
   };
 }
 
-export function signUp(email, username, password, fullName, phone, birthday, navigate) {
+export function signUp(email, username, password, fullName, phone, birthday, userType, navigate) {
   return async (dispatch) => {
     const toastId = toast.loading("Loading...");
     dispatch(setLoading(true));
 
     try {
-      const response = await apiConnector("POST", SIGNUP_API, {
+      // Chọn endpoint dựa trên loại người dùng
+      const signupEndpoint = userType === 'educator' ? SIGNUP_EDUCATOR_API : SIGNUP_STUDENT_API;
+      
+      const response = await apiConnector("POST", signupEndpoint, {
         email,
         username,
         password,
@@ -118,35 +125,67 @@ export function login(credentials, navigate) {
 
     try {
       // --- Step 1: Login ---
-      const response = await apiConnector("POST", LOGIN_API, credentials);
+      // Chuẩn bị payload dựa trên grantType
+      let loginPayload;
+      if (credentials.grantType === 'admin') {
+        loginPayload = {
+          grantType: credentials.grantType,
+          username: credentials.email, // email field chứa username cho admin
+          password: credentials.password
+        };
+      } else {
+        loginPayload = {
+          grantType: credentials.grantType,
+          email: credentials.email,
+          password: credentials.password
+        };
+      }
+      
+      const response = await apiConnector("POST", LOGIN_API, loginPayload);
 
       if (!response?.data?.accessToken) {
         throw new Error(response?.data?.message || "Login failed");
       }
 
       const accessToken = response.data.accessToken;
+      const userType = response.data.userType; // API trả về userType
       dispatch(setToken(accessToken));
       localStorage.setItem("accessToken", accessToken);
 
       toast.success("Login Successful");
 
-      // --- Step 2: Get Profile ---
-      const profileRes = await apiConnector("GET", PROFILE_API, null, {
+      // --- Step 2: Get Profile based on user type ---
+      let profileEndpoint;
+      switch(userType) {
+        case 'admin':
+          profileEndpoint = BASE_URL + "/v1/admin/profile";
+          break;
+        case 'student':
+          profileEndpoint = BASE_URL + "/v1/student/profile";
+          break;
+        case 'educator':
+          profileEndpoint = BASE_URL + "/v1/educator/profile";
+          break;
+        default:
+          profileEndpoint = PROFILE_API; // fallback
+      }
+
+      const profileRes = await apiConnector("GET", profileEndpoint, null, {
         Authorization: `Bearer ${accessToken}`,
       });
 
-      const adminProfile = profileRes.data?.profile; // <-- Lấy từ profile
-      if (!adminProfile) {
+      const userProfile = profileRes.data?.profile; // <-- Lấy từ profile
+      if (!userProfile) {
         throw new Error("Failed to load profile");
       }
 
       const userImage =
-          adminProfile.image ||
+          userProfile.image ||
           `https://api.dicebear.com/5.x/initials/svg?seed=${
-              adminProfile.username || adminProfile.email
+              userProfile.username || userProfile.email
           }`;
 
-      const finalUser = { ...adminProfile, image: userImage };
+      const finalUser = { ...userProfile, image: userImage, userType };
 
       dispatch(setUser(finalUser));
       localStorage.setItem("user", JSON.stringify(finalUser));

@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { BiArrowBack } from "react-icons/bi";
 import { RxCountdownTimer } from "react-icons/rx";
 import { useDispatch, useSelector } from "react-redux";
-import { sendOtp, signUp } from "../services/operations/authAPI";
+import { sendOtp, verifyEmail } from "../services/operations/authAPI";
 import Loading from "../components/common/Loading";
 
 function VerifyEmail() {
@@ -22,7 +22,7 @@ function VerifyEmail() {
     }
   }, [signupData, navigate]);
 
-  // Xử lý xác minh OTP + đăng ký
+  // Xử lý xác minh OTP
   const handleVerifyAndSignup = (e) => {
     e.preventDefault();
 
@@ -30,15 +30,10 @@ function VerifyEmail() {
       return;
     }
 
-    // Gửi dữ liệu signup kèm OTP
+    // Gọi hàm verifyEmail với email và OTP
     dispatch(
-        signUp(
+        verifyEmail(
             signupData.email,
-            signupData.username,
-            signupData.password,
-            signupData.fullName,
-            signupData.phone,
-            signupData.birthday,
             otp,
             navigate
         )
